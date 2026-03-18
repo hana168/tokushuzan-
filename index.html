@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>特殊算マスター</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#3b82f6;--blue-dark:#1d4ed8;--blue-light:#bfdbfe;
+  --sky:#e8f4fd;--yellow:#fbbf24;--yellow-light:#fef9c3;
+  --green:#22c55e;--green-light:#dcfce7;
+  --red:#ef4444;--orange:#f97316;--purple:#8b5cf6;
+  --text:#1e293b;--text-light:#64748b;--white:#fff;
+  --shadow:0 4px 20px rgba(59,130,246,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;
+  background:linear-gradient(160deg,#dbeafe 0%,#e0f2fe 40%,#f0fdf4 100%);
+  min-height:100vh;color:var(--text);overflow-x:hidden;}
+.bubble{position:fixed;border-radius:50%;opacity:.11;pointer-events:none;z-index:0;}
+.b1{width:240px;height:240px;background:var(--blue);top:-60px;right:-50px;}
+.b2{width:150px;height:150px;background:var(--yellow);bottom:60px;left:-40px;}
+.b3{width:100px;height:100px;background:var(--green);bottom:200px;right:10px;}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 60px;position:relative;z-index:1;}
+
+/* Header */
+.header{text-align:center;padding:18px 0 14px;}
+.badge{display:inline-block;background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;font-size:12px;font-weight:700;padding:4px 16px;border-radius:20px;
+  letter-spacing:.05em;margin-bottom:8px;}
+.header h1{font-family:'Kaisei Decol',serif;font-size:clamp(22px,6vw,36px);
+  color:var(--blue-dark);line-height:1.2;}
+.header h1 span{color:var(--orange);}
+.stars{font-size:16px;margin-top:4px;letter-spacing:3px;}
+
+/* Progress */
+.prog-card{background:#fff;border-radius:18px;padding:14px 18px;
+  margin-bottom:16px;box-shadow:var(--shadow);border:2px solid var(--blue-light);}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.prog-label{font-size:13px;font-weight:700;color:var(--text-light);}
+.prog-count{font-size:13px;font-weight:900;color:var(--blue-dark);}
+.bar-bg{background:#e2e8f0;border-radius:99px;height:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--blue),var(--green));
+  transition:width .6s cubic-bezier(.34,1.56,.64,1);}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;
+  background:var(--blue-light);color:var(--blue-dark);}
+.tag.retry{background:#fee2e2;color:#991b1b;}
+.tag.done{background:var(--green-light);color:#14532d;}
+
+/* Question card */
+.qcard{background:#fff;border-radius:24px;padding:22px 20px;
+  margin-bottom:16px;box-shadow:var(--shadow);border:2px solid var(--blue-light);
+  animation:fadein .4s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.qcard-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.qtype{background:linear-gradient(135deg,var(--orange),var(--yellow));
+  color:#fff;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;}
+.qnum-lbl{font-size:12px;color:var(--text-light);font-weight:700;}
+.prob{font-size:clamp(14px,3.8vw,17px);line-height:1.9;font-weight:700;
+  background:var(--sky);border-radius:14px;padding:16px 18px;
+  border-left:5px solid var(--blue);margin-bottom:12px;}
+.subq{background:var(--yellow-light);border-radius:12px;padding:12px 16px;
+  font-size:15px;font-weight:900;border:1.5px solid #fde68a;margin-bottom:14px;}
+.hint-lbl{font-size:13px;color:var(--text-light);margin-bottom:8px;line-height:1.6;}
+
+/* Input */
+.irow{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px;}
+.ainput{flex:1;font-family:'Zen Kaku Gothic New',sans-serif;font-size:16px;font-weight:700;
+  padding:13px 16px;border:2.5px solid var(--blue-light);border-radius:14px;
+  background:var(--sky);color:var(--text);outline:none;resize:none;
+  min-height:52px;line-height:1.5;transition:border-color .2s,box-shadow .2s;}
+.ainput:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(59,130,246,.15);background:#fff;}
+.ainput.rec{border-color:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.15);background:#fff5f5;}
+.micbtn{width:52px;height:52px;flex-shrink:0;border-radius:14px;border:none;cursor:pointer;
+  font-size:22px;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(59,130,246,.3);
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.micbtn.rec{background:var(--red);animation:pmb .9s infinite;}
+@keyframes pmb{0%,100%{box-shadow:0 4px 12px rgba(239,68,68,.4);}
+  50%{box-shadow:0 4px 24px rgba(239,68,68,.7);}}
+.mstat{font-size:12px;color:var(--text-light);margin-bottom:10px;}
+.mstat.on{color:var(--red);font-weight:700;}
+
+/* Submit */
+.subbtn{width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--blue),var(--blue-dark));
+  color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:17px;font-weight:900;
+  border:none;border-radius:14px;cursor:pointer;
+  box-shadow:0 4px 14px rgba(59,130,246,.35);
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.subbtn:active{transform:scale(.98);}
+
+/* Feedback */
+.fb{margin-top:12px;border-radius:14px;padding:14px 18px;font-size:15px;
+  font-weight:700;line-height:1.6;display:none;
+  animation:popin .35s cubic-bezier(.34,1.56,.64,1);}
+.fb.ok{display:block;background:var(--green-light);color:#14532d;border:2px solid #86efac;}
+.fb.ng{display:block;background:#fee2e2;color:#7f1d1d;border:2px solid #fca5a5;}
+@keyframes popin{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* Answer reveal */
+.anscard{background:#fff;border-radius:20px;padding:20px;margin-bottom:16px;
+  box-shadow:var(--shadow);border:2px solid var(--purple);display:none;}
+.anscard.show{display:block;animation:popin .4s cubic-bezier(.34,1.56,.64,1);}
+.anslbl{font-size:12px;font-weight:700;color:var(--purple);margin-bottom:12px;}
+.step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.snum{background:var(--purple);color:#fff;width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;}
+.stxt{font-size:14px;line-height:1.75;font-weight:700;}
+.ansfin{background:var(--yellow-light);border-radius:12px;padding:12px 16px;
+  font-size:17px;font-weight:900;color:var(--orange);text-align:center;
+  border:2px solid #fde68a;margin-top:8px;}
+
+/* Action buttons */
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.btn{flex:1;min-width:120px;padding:14px 12px;border-radius:14px;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:700;
+  border:none;cursor:pointer;transition:all .2s;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.btn:active{transform:scale(.97);}
+.btn-next{background:linear-gradient(135deg,var(--green),#16a34a);color:#fff;
+  box-shadow:0 4px 14px rgba(34,197,94,.3);}
+.btn-ans{background:var(--yellow-light);color:#92400e;border:2px solid #fde68a;}
+.btn-reset{background:#f1f5f9;color:var(--text-light);border:2px solid #e2e8f0;}
+.btn-next:disabled{background:#e2e8f0;color:#94a3b8;box-shadow:none;cursor:default;}
+
+/* iOS note */
+.iosnote{background:#fef9c3;border:1.5px solid #fde68a;border-radius:12px;
+  padding:10px 14px;font-size:13px;color:#78350f;margin-bottom:14px;
+  line-height:1.6;display:none;}
+.iosnote.show{display:block;}
+
+/* ── 全問クリア画面 ── */
+.clear-screen{display:none;text-align:center;padding:20px 0;}
+.clear-screen.show{display:block;animation:fadein .6s ease;}
+
+/* キャラクター（CSS製プリン色クマ） */
+/* ▼▼▼ ここを画像URLに変えるだけで好きなキャラに差し替えられます ▼▼▼ */
+.chara-wrap{position:relative;width:160px;height:160px;margin:0 auto 20px;}
+.chara-img{width:160px;height:160px;object-fit:contain;display:none;}
+/* 画像を使う場合: .chara-img の display:none を block に変え、src にURLを入れる */
+
+/* CSSキャラ（画像なしの場合はこちらが表示される） */
+.css-chara{width:160px;height:160px;position:relative;animation:bounce 1s infinite alternate ease-in-out;}
+@keyframes bounce{from{transform:translateY(0);}to{transform:translateY(-12px);}}
+
+/* 顔 */
+.cc-face{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  width:110px;height:100px;
+  background:#f5c842;border-radius:50% 50% 45% 45%;
+  box-shadow:0 4px 12px rgba(245,200,66,.4);
+}
+/* 耳 */
+.cc-face::before,.cc-face::after{
+  content:'';position:absolute;
+  width:32px;height:32px;background:#f5c842;border-radius:50%;top:-12px;
+}
+.cc-face::before{left:8px;}
+.cc-face::after{right:8px;}
+/* 耳の内側 */
+.cc-ear-in-l,.cc-ear-in-r{
+  position:absolute;width:18px;height:18px;
+  background:#f9a825;border-radius:50%;top:-6px;z-index:1;
+}
+.cc-ear-in-l{left:19px;}
+.cc-ear-in-r{right:19px;}
+/* 目 */
+.cc-eye-l,.cc-eye-r{
+  position:absolute;width:14px;height:14px;
+  background:#1e293b;border-radius:50%;top:32px;
+}
+.cc-eye-l{left:22px;}
+.cc-eye-r{right:22px;}
+/* ハイライト */
+.cc-eye-l::after,.cc-eye-r::after{
+  content:'';position:absolute;width:5px;height:5px;
+  background:#fff;border-radius:50%;top:2px;left:2px;
+}
+/* 鼻 */
+.cc-nose{
+  position:absolute;width:12px;height:8px;
+  background:#e07b2a;border-radius:50%;
+  top:50px;left:50%;transform:translateX(-50%);
+}
+/* 口（ニコニコ） */
+.cc-mouth{
+  position:absolute;width:28px;height:14px;
+  border:3px solid #1e293b;border-top:none;
+  border-radius:0 0 20px 20px;
+  top:60px;left:50%;transform:translateX(-50%);
+}
+/* ほっぺ */
+.cc-cheek-l,.cc-cheek-r{
+  position:absolute;width:20px;height:12px;
+  background:rgba(255,150,120,.4);border-radius:50%;top:52px;
+}
+.cc-cheek-l{left:10px;}
+.cc-cheek-r{right:10px;}
+/* 体 */
+.cc-body{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:80px;height:55px;
+  background:#f5c842;border-radius:40px 40px 30px 30px;
+}
+/* おなか */
+.cc-belly{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:48px;height:32px;
+  background:#fde68a;border-radius:50%;
+}
+/* 手 */
+.cc-arm-l,.cc-arm-r{
+  position:absolute;bottom:18px;
+  width:22px;height:40px;
+  background:#f5c842;border-radius:12px;
+}
+.cc-arm-l{left:14px;transform:rotate(20deg);}
+.cc-arm-r{right:14px;transform:rotate(-20deg);}
+
+/* クリアテキスト */
+.clear-title{font-family:'Kaisei Decol',serif;
+  font-size:clamp(28px,8vw,44px);color:var(--blue-dark);
+  margin-bottom:8px;line-height:1.2;}
+.clear-title span{color:var(--orange);}
+.clear-msg{font-size:16px;font-weight:700;color:var(--text);
+  margin-bottom:6px;line-height:1.7;}
+.clear-sub{font-size:14px;color:var(--text-light);margin-bottom:24px;}
+.clear-speech{
+  background:#fff;border:3px solid var(--yellow);
+  border-radius:20px;padding:16px 22px;
+  font-size:17px;font-weight:900;color:var(--text);
+  margin:0 auto 24px;max-width:300px;
+  position:relative;box-shadow:var(--shadow);
+  animation:popin .5s .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+.clear-speech::after{
+  content:'';position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  border:8px solid transparent;border-top-color:var(--yellow);
+}
+.stars-big{font-size:32px;letter-spacing:6px;margin-bottom:16px;
+  animation:popin .5s .5s both;}
+
+/* Confetti */
+.cfbox{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:999;overflow:hidden;}
+.cfp{position:absolute;opacity:0;animation:cfall linear forwards;}
+@keyframes cfall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+::-webkit-scrollbar{width:0;}
+</style>
+</head>
+<body>
+<div class="bubble b1"></div>
+<div class="bubble b2"></div>
+<div class="bubble b3"></div>
+<div class="cfbox" id="cf"></div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="badge">✦ 特殊算マスター ✦</div>
+    <h1>特殊算<span>あてクイズ</span></h1>
+    <div class="stars">⭐⭐⭐</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-card" id="progCard">
+    <div class="prog-top">
+      <span class="prog-label">せいかい数</span>
+      <span class="prog-count" id="progCount">0 / 0</span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div class="tag-row" id="tagRow"></div>
+  </div>
+
+  <!-- iOS note -->
+  <div class="iosnote" id="iosnote">
+    📱 マイクを使うには：<strong>設定 → プライバシーとセキュリティ → 音声認識 → オン</strong>
+    ／ <strong>設定 → Safari → マイク → 許可</strong>
+  </div>
+
+  <!-- Question area -->
+  <div id="quizArea">
+    <div class="qcard" id="qcard">
+      <div class="qcard-head">
+        <span class="qnum-lbl" id="qnumlbl">問題 1</span>
+      </div>
+      <div class="prob" id="probText"></div>
+      <div class="subq" id="subqText"></div>
+      <div class="hint-lbl" id="hintLbl"></div>
+      <div class="irow">
+        <textarea class="ainput" id="ainput" rows="2" oninput="resize(this)"
+          placeholder="ここに入力、またはマイクで話してね"></textarea>
+        <button class="micbtn" id="micbtn">🎙️</button>
+      </div>
+      <div class="mstat" id="mstat">🎤 マイクボタンで話すと文字が入力されます</div>
+      <button class="subbtn" id="subbtn">✅ こたえる</button>
+      <div class="fb" id="fb"></div>
+    </div>
+
+    <!-- Answer reveal -->
+    <div class="anscard" id="anscard">
+      <div class="anslbl">📖 正解の解き方</div>
+      <div id="ansSteps"></div>
+      <div class="ansfin" id="ansFin"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btnrow">
+      <button class="btn btn-next" id="btnNext" disabled>➡️ 次の問題</button>
+      <button class="btn btn-ans" id="btnAns">😓 正解を見る</button>
+      <button class="btn btn-reset" id="btnReset">🔄 はじめからする</button>
+    </div>
+  </div>
+
+  <!-- ── 全問クリア画面 ── -->
+  <div class="clear-screen" id="clearScreen">
+    <div class="clear-speech">よく頑張ったね！全問正解だよ！🎉</div>
+
+    <!-- キャラクター -->
+    <!-- ▼ 好きな画像に変える場合はここのsrcを変更してください ▼ -->
+    <!-- <img class="chara-img" src="ここに画像URL" style="display:block"> -->
+    <!-- ▲ 上の行のコメントを外してURLを入れると画像キャラが表示されます ▲ -->
+
+    <!-- CSSキャラ（デフォルト） -->
+    <div class="chara-wrap">
+      <div class="css-chara">
+        <div class="cc-face">
+          <div class="cc-ear-in-l"></div>
+          <div class="cc-ear-in-r"></div>
+          <div class="cc-eye-l"></div>
+          <div class="cc-eye-r"></div>
+          <div class="cc-nose"></div>
+          <div class="cc-mouth"></div>
+          <div class="cc-cheek-l"></div>
+          <div class="cc-cheek-r"></div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-belly"></div>
+        </div>
+        <div class="cc-arm-l"></div>
+        <div class="cc-arm-r"></div>
+      </div>
+    </div>
+
+    <div class="stars-big">⭐⭐⭐⭐⭐</div>
+    <div class="clear-title">全問<span>せいかい</span>！</div>
+    <div class="clear-msg">すごい！全部できたね！</div>
+    <div class="clear-sub">特殊算マスターに認定！</div>
+    <div class="btnrow" style="justify-content:center;">
+      <button class="btn btn-reset" id="btnClearReset"
+        style="max-width:220px;background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;">
+        🔄 もう一度チャレンジ
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+// ════════════════════════════════════════════════════════════════
+// ★★★ 問題データ ★★★
+// 問題を追加するときはここに追加するだけでOK！
+// ════════════════════════════════════════════════════════════════
+var QUESTIONS = [
+
+  // ── 問題1：和差算（何算？） ──────────────────────────────────
+  {
+    id: 'wasazan_q1',
+    type: '和差算',
+    prob: '一郎君・二郎君・三郎君の３人が、カードを合わせて<strong>42まい</strong>持っています。<br>それぞれが持っているカードのまい数をくらべたところ、一郎君は二郎君よりも<strong>５まい多く</strong>、三郎君は一郎君よりも<strong>２まい多い</strong>ことがわかりました。<br>二郎君はカードを何まい持っていますか？',
+    subq: 'この問題は何算でしょう？',
+    hintLbl: '',
+    // 正解チェック（テキスト入力 or 音声）
+    check: function(ans){ return ['わさ','和差','わさ算','和差算'].some(function(k){return ans.includes(k);}); },
+    okMsg: '🎉 せいかい！「和差算」です！和と差の関係を使って解く特殊算だよ！',
+    ngMsg: 'おしい！ヒント：「和（合計）」と「差（ちがい）」を使う算法だよ。もう一度考えてみよう！',
+    ansSteps: [
+      'この問題は<strong>和差算</strong>（3量以上）です。',
+      '三郎と二郎の差：5＋2＝<strong>7まい</strong>',
+      '3人を<strong>二郎にそろえる</strong>（線分図）：42−(5＋7)＝<strong>30まい</strong>',
+      '二郎＝30÷3＝<strong>10まい</strong>',
+    ],
+    ansFin: '答え：和差算　／　二郎君＝１０まい',
+  },
+
+  // ── 問題2：和差算（解き方） ──────────────────────────────────
+  {
+    id: 'wasazan_q2',
+    type: '和差算',
+    prob: '一郎君・二郎君・三郎君の３人が、カードを合わせて<strong>42まい</strong>持っています。<br>それぞれが持っているカードのまい数をくらべたところ、一郎君は二郎君よりも<strong>５まい多く</strong>、三郎君は一郎君よりも<strong>２まい多い</strong>ことがわかりました。',
+    subq: '解き方を教えて！',
+    hintLbl: '💬 どうやって解くか、自分の言葉で説明してみよう！\n（例：線分図を書く、和と差がわかっている、求めたいものにそろえる…など）',
+    check: function(ans){
+      var kws=[
+        ['わ','和','合計','ごうけい'],
+        ['さ','差','ちがい','多い'],
+        ['求め','もとめ','二郎','じろう'],
+        ['そろ','揃','あわせ'],
+        ['せんぶん','線分','図','かく','書'],
+      ];
+      var found=kws.filter(function(g){return g.some(function(k){return ans.includes(k);});}).length;
+      return found>=2;
+    },
+    okMsg: '🎉 せいかい！解き方がよくわかってるね！',
+    ngMsg: 'おしい！「和・差・そろえる・線分図」などのキーワードを使って説明してみよう！',
+    ansSteps: [
+      '線分図で3人のカードの関係を書く',
+      '3人を<strong>二郎にそろえる</strong>：一郎から5まい、三郎から7まい引く',
+      '合計：42−(5＋7)＝<strong>30まい</strong>',
+      '二郎＝30÷3＝<strong>10まい</strong>',
+    ],
+    ansFin: '答え：線分図→求めたい二郎にそろえる→差を引いて割る',
+  },
+
+  // ── 問題3：つるかめ算・弁償算（何算？） ─────────────────────────
+  {
+    id: 'benshozan_q1',
+    type: 'つるかめ算（弁償算）',
+    prob: '花子さんが、<strong>200まいのお皿をあらうアルバイト</strong>をします。お皿を１まいあらうごとに<strong>20円もらえます</strong>が、お皿をわってしまうと、20円がもらえないだけでなく、お皿代の<strong>50円を弁償</strong>しなければなりません。<br>花子さんは<strong>3580円</strong>もらいました。',
+    subq: 'この問題は何算でしょう？',
+    hintLbl: '',
+    check: function(ans){
+      return ['つるかめ','鶴亀','弁償','べんしょう','べんしょうざん','弁償算'].some(function(k){ return ans.includes(k); });
+    },
+    okMsg: '🎉 せいかい！「つるかめ算（弁償算）」です！1枚わるごとに減る金額に注目して解く特殊算だよ！',
+    ngMsg: 'おしい！ヒント：1枚わるごとにもらえるお金が「70円」ずつ減っていくよ。何算かな？',
+    ansSteps: [
+      '1枚もわらなかった場合：20×200＝<strong>4000円</strong>',
+      '1枚わるごとに減る金額：もらえるはずの20円＋弁償の50円＝<strong>70円</strong>ずつ減る',
+      'わった枚数＝（4000－3580）÷70＝<strong>6まい</strong>',
+    ],
+    ansFin: '答え：（1）4000円・3930円・3860円　（2）6まい',
+  },
+
+  // ── 問題4：つるかめ算・弁償算（解き方） ─────────────────────────
+  {
+    id: 'benshozan_q2',
+    type: 'つるかめ算（弁償算）',
+    prob: '花子さんが、<strong>200まいのお皿をあらうアルバイト</strong>をします。お皿を１まいあらうごとに<strong>20円もらえます</strong>が、お皿をわってしまうと、20円がもらえないだけでなく、お皿代の<strong>50円を弁償</strong>しなければなりません。<br>花子さんは<strong>3580円</strong>もらいました。',
+    subq: '解き方を教えて！',
+    hintLbl: '💬 どうやって解くか、自分の言葉で説明してみよう！\n（例：全部わらなかった場合を考える、1枚わるごとに減る金額を出す…など）',
+    check: function(ans){
+      var kws=[
+        ['ぜんぶ','全部','全員','4000','よんせん','もしも'],
+        ['へる','減る','差','さ','70','ななじゅう'],
+        ['わった','割った','まい','枚'],
+        ['ひく','引く','÷','わる','割る'],
+      ];
+      var found=kws.filter(function(g){ return g.some(function(k){ return ans.includes(k); }); }).length;
+      return found>=2;
+    },
+    okMsg: '🎉 せいかい！弁償算の解き方がよくわかってるね！',
+    ngMsg: 'おしい！「全部わらなかった場合」「1枚わるごとに70円減る」というキーワードを使って説明してみよう！',
+    ansSteps: [
+      '①まず<strong>全部わらなかった場合</strong>を考える：20×200＝4000円',
+      '②1枚わるごとに減る金額：20円（もらえなくなる）＋50円（弁償）＝<strong>70円</strong>',
+      '③わった枚数＝（4000－3580）÷70＝<strong>6まい</strong>',
+    ],
+    ansFin: '答え：全部わらなかった場合を基準に、1枚あたりの差で割る！',
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // ここに問題を追加していくだけ！
+  // 例：
+  // {
+  //   id: 'tsurukame_q1',
+  //   type: 'つるかめ算',
+  //   prob: '問題文をここに書く',
+  //   subq: '質問をここに書く',
+  //   hintLbl: '',
+  //   check: function(ans){ return ans.includes('つるかめ'); },
+  //   okMsg: '🎉 せいかい！',
+  //   ngMsg: 'おしい！',
+  //   ansSteps: ['解き方ステップ1', 'ステップ2'],
+  //   ansFin: '答え：○○',
+  // },
+  // ════════════════════════════════════════════════════════════════
+
+];
+// ════════════════════════════════════════════════════════════════
+
+// ── State ────────────────────────────────────────────────────────
+var queue=[];      // 出題順（シャッフル済み）
+var wrongIds=[];   // 不正解問題ID
+var doneIds=[];    // 正解済みID
+var current=null;  // 現在の問題
+var answered=false;
+var rec=null, isRec=false, tapped=false;
+
+// ── Init ─────────────────────────────────────────────────────────
+function init(){
+  doneIds=[]; wrongIds=[];
+  queue=shuffle(QUESTIONS.slice());
+  answered=false;
+  document.getElementById('clearScreen').className='clear-screen';
+  document.getElementById('quizArea').style.display='';
+  updateProgress();
+  loadNext();
+}
+
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;
+  }
+  return arr;
+}
+
+// ── Progress ──────────────────────────────────────────────────────
+function updateProgress(){
+  var total=QUESTIONS.length;
+  var done=doneIds.length;
+  document.getElementById('progCount').textContent=done+' / '+total;
+  document.getElementById('barFill').style.width=(total?Math.round(done/total*100):0)+'%';
+
+  var row=document.getElementById('tagRow');
+  row.innerHTML='';
+  QUESTIONS.forEach(function(q,i){
+    var t=document.createElement('span');
+    var isDone=doneIds.indexOf(q.id)>=0;
+    var isWrong=wrongIds.indexOf(q.id)>=0;
+    t.className='tag'+(isDone?' done':isWrong?' retry':'');
+    t.textContent=(i+1)+(isDone?' ✓':isWrong?' 再':'');
+    row.appendChild(t);
+  });
+}
+
+// ── Load next question ────────────────────────────────────────────
+function loadNext(){
+  // キューが空になったら未正解問題を再シャッフル
+  if(queue.length===0){
+    var remaining=QUESTIONS.filter(function(q){return doneIds.indexOf(q.id)<0;});
+    if(remaining.length===0){ showClear(); return; }
+    queue=shuffle(remaining);
+  }
+
+  current=queue.shift();
+  answered=false;
+
+  // UI reset
+  var inp=document.getElementById('ainput');
+  inp.value=''; inp.style.height='auto';
+  inp.className='ainput';
+  document.getElementById('fb').className='fb';
+  document.getElementById('anscard').className='anscard';
+  document.getElementById('btnNext').disabled=true;
+
+  // Set content
+  var idx=QUESTIONS.indexOf(current)+1;
+  document.getElementById('qnumlbl').textContent='問題 '+idx;
+  document.getElementById('probText').innerHTML=current.prob;
+  document.getElementById('subqText').textContent=current.subq;
+  var hl=document.getElementById('hintLbl');
+  hl.textContent='';
+  hl.style.display='none';
+
+  document.getElementById('qcard').style.animation='none';
+  setTimeout(function(){document.getElementById('qcard').style.animation='';},10);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Submit ────────────────────────────────────────────────────────
+function doSubmit(){
+  if(answered) return;
+  var raw=document.getElementById('ainput').value.trim();
+  if(!raw){alert('こたえを入力してね！');return;}
+  answered=true;
+
+  var ok=current.check(toHiragana(raw)); // ひらがな変換してから判定
+  var fb=document.getElementById('fb');
+  fb.className='fb '+(ok?'ok':'ng');
+  fb.textContent=(ok?'🎉 ':'🤔 ')+(ok?current.okMsg:current.ngMsg);
+
+  if(ok){
+    if(doneIds.indexOf(current.id)<0) doneIds.push(current.id);
+    var wi=wrongIds.indexOf(current.id);
+    if(wi>=0) wrongIds.splice(wi,1);
+    confetti();
+  } else {
+    if(wrongIds.indexOf(current.id)<0) wrongIds.push(current.id);
+    // 不正解は再度キューに追加
+    if(queue.indexOf(current)<0) queue.push(current);
+  }
+
+  document.getElementById('btnNext').disabled=false;
+  updateProgress();
+}
+
+// ── Show answer ────────────────────────────────────────────────────
+function doShowAns(){
+  var card=document.getElementById('anscard');
+  card.className='anscard show';
+
+  var steps=document.getElementById('ansSteps');
+  steps.innerHTML='';
+  current.ansSteps.forEach(function(s,i){
+    var d=document.createElement('div');
+    d.className='step';
+    d.innerHTML='<div class="snum">'+(i+1)+'</div><div class="stxt">'+s+'</div>';
+    steps.appendChild(d);
+  });
+  document.getElementById('ansFin').textContent=current.ansFin;
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // 正解を見たら不正解扱い（キューに残す）
+  if(!answered){
+    answered=true;
+    if(wrongIds.indexOf(current.id)<0) wrongIds.push(current.id);
+    if(queue.indexOf(current)<0) queue.push(current);
+    document.getElementById('btnNext').disabled=false;
+    updateProgress();
+  }
+}
+
+// ── Clear screen ──────────────────────────────────────────────────
+function showClear(){
+  document.getElementById('quizArea').style.display='none';
+  document.getElementById('clearScreen').className='clear-screen show';
+  bigConfetti();
+}
+
+// ── 漢字・カタカナ → ひらがな変換 ────────────────────────────────
+function toHiragana(str){
+  // カタカナ→ひらがな
+  str = str.replace(/[ァ-ヶ]/g, function(c){
+    return String.fromCharCode(c.charCodeAt(0) - 0x60);
+  });
+  // よく使う漢字変換（特殊算の名前）
+  var map = {
+    '和差算':'わさざん','和差':'わさ','鶴亀算':'つるかめざん','鶴亀':'つるかめ',
+    '旅人算':'たびびとざん','仕事算':'しごとざん','植木算':'うえきざん',
+    '差集め算':'さあつめざん','周期算':'しゅうきざん','倍数算':'ばいすうざん',
+    '分配算':'ぶんぱいざん','年齢算':'ねんれいざん','相当算':'そうとうざん',
+    '弁償算':'べんしょうざん','弁償':'べんしょう',
+    '線分図':'せんぶんず','合計':'ごうけい','差':'さ','和':'わ',
+    '求める':'もとめる','揃える':'そろえる','図':'ず',
+    '全部':'ぜんぶ','減る':'へる','割る':'わる','引く':'ひく',
+  };
+  Object.keys(map).forEach(function(k){ str = str.split(k).join(map[k]); });
+  return str;
+}
+
+// ── Mic ───────────────────────────────────────────────────────────
+var SR=window.webkitSpeechRecognition||window.SpeechRecognition||null;
+if(!SR) document.getElementById('iosnote').className='iosnote show';
+
+function startRec(){
+  if(!SR){document.getElementById('iosnote').className='iosnote show';return;}
+  if(rec){try{rec.abort();}catch(e){} rec=null;}
+  var r=new SR();
+  r.lang='ja-JP'; r.interimResults=false; r.maxAlternatives=1; r.continuous=false;
+  rec=r;
+  r.onstart=function(){
+    isRec=true;
+    document.getElementById('micbtn').className='micbtn rec';
+    document.getElementById('micbtn').textContent='⏹️';
+    document.getElementById('mstat').textContent='🔴 聞こえています…話してください';
+    document.getElementById('mstat').className='mstat on';
+    document.getElementById('ainput').className='ainput rec';
+  };
+  r.onresult=function(e){
+    var txt=e.results[e.resultIndex][0].transcript;
+    txt=toHiragana(txt); // 漢字・カタカナ→ひらがなに変換
+    var inp=document.getElementById('ainput');
+    inp.value=(inp.value.trim()?inp.value.trim()+'　':'')+txt;
+    resize(inp);
+  };
+  r.onerror=function(e){
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')
+      document.getElementById('iosnote').className='iosnote show';
+    stopRec();
+  };
+  r.onend=function(){stopRec();};
+  try{r.start();}catch(ex){stopRec();}
+}
+function stopRec(){
+  isRec=false;
+  if(rec){try{rec.stop();}catch(e){} rec=null;}
+  document.getElementById('micbtn').className='micbtn';
+  document.getElementById('micbtn').textContent='🎙️';
+  document.getElementById('mstat').textContent='🎤 マイクボタンで話すと文字が入力されます';
+  document.getElementById('mstat').className='mstat';
+  document.getElementById('ainput').className='ainput';
+}
+
+// ── Confetti ──────────────────────────────────────────────────────
+function confetti(){
+  var c=document.getElementById('cf'); c.innerHTML='';
+  var cols=['#3b82f6','#fbbf24','#22c55e','#f97316','#8b5cf6','#ec4899'];
+  for(var i=0;i<50;i++){
+    var el=document.createElement('div'); el.className='cfp';
+    var s=6+Math.random()*10;
+    el.style.cssText='left:'+Math.random()*100+'vw;top:-20px;width:'+s+'px;height:'+s+'px;background:'+cols[Math.floor(Math.random()*cols.length)]+';border-radius:'+(Math.random()>.5?'50%':'3px')+';animation-duration:'+(1.2+Math.random()*1.5)+'s;animation-delay:'+(Math.random()*.5)+'s;';
+    c.appendChild(el);
+  }
+  setTimeout(function(){c.innerHTML='';},4000);
+}
+function bigConfetti(){
+  var c=document.getElementById('cf'); c.innerHTML='';
+  var cols=['#3b82f6','#fbbf24','#22c55e','#f97316','#8b5cf6','#ec4899','#f43f5e'];
+  for(var i=0;i<120;i++){
+    var el=document.createElement('div'); el.className='cfp';
+    var s=5+Math.random()*14;
+    el.style.cssText='left:'+Math.random()*100+'vw;top:-20px;width:'+s+'px;height:'+s+'px;background:'+cols[Math.floor(Math.random()*cols.length)]+';border-radius:'+(Math.random()>.5?'50%':'3px')+';animation-duration:'+(2+Math.random()*2)+'s;animation-delay:'+(Math.random()*1)+'s;';
+    c.appendChild(el);
+  }
+  setTimeout(function(){c.innerHTML='';},6000);
+}
+
+function resize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+window.resize=resize;
+
+// ── Event binding ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  // Submit
+  document.getElementById('subbtn').addEventListener('click',doSubmit);
+  // Next
+  document.getElementById('btnNext').addEventListener('click',function(){
+    if(!this.disabled) loadNext();
+  });
+  // Show answer
+  document.getElementById('btnAns').addEventListener('click',doShowAns);
+  // Reset
+  document.getElementById('btnReset').addEventListener('click',init);
+  document.getElementById('btnClearReset').addEventListener('click',init);
+
+  // Mic (touchstart direct binding for iOS)
+  var mb=document.getElementById('micbtn');
+  mb.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    tapped=true;
+    isRec?stopRec():startRec();
+  },{passive:false});
+  mb.addEventListener('click',function(){
+    if(tapped){tapped=false;return;}
+    isRec?stopRec():startRec();
+  });
+
+  init();
+});
+
+})();
+</script>
+</body>
+</html>
